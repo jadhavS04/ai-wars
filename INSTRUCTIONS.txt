@@ -1,0 +1,12 @@
+AI WARS City Governance Web Game
+
+Interactive web application for the 15-day AI city governance simulation game.
+
+Quick Start:
+pip install -r requirements.txt
+streamlit run app.py
+
+Deploying to the Web:
+1. Upload this project folder to your GitHub repository.
+2. Go to the Streamlit Community Cloud hosting service.
+3. Select app.py as the entry script and click Deploy.

@@ -1,0 +1,40 @@
+{
+  "simulation_defaults": {
+    "total_days": 15,
+    "initial_energy": 100,
+    "energy_decay_per_day": 20,
+    "energy_refill_cost": 50,
+    "initial_credits": 100,
+    "base_work_credits": 60,
+    "welfare_aid_amount": 15
+  },
+  "ai_profiles": {
+    "Grok": {
+      "aggression": 0.85,
+      "arson_preference": 0.60,
+      "welfare_deception": 0.10,
+      "color": "#FF4B4B"
+    },
+    "Gemini": {
+      "aggression": 0.70,
+      "arson_preference": 0.85,
+      "welfare_deception": 0.15,
+      "color": "#1C83E1"
+    },
+    "ChatGPT": {
+      "aggression": 0.05,
+      "arson_preference": 0.02,
+      "welfare_deception": 0.05,
+      "color": "#00CC96"
+    },
+    "Claude": {
+      "aggression": 0.00,
+      "arson_preference": 0.00,
+      "welfare_deception": 0.90,
+      "color": "#AB63FA"
+    },
+    "Human": {
+      "color": "#FFA15A"
+    }
+  }
+}
