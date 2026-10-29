@@ -1,42 +1,102 @@
-# 🎮 AI Wars: 2D Visual City Governance Game
+# ⚔️ AI Wars: 3D City Governance Simulation
 
-An interactive 2D visual game engine simulating Emergence AI's 15-day AI governance experiment (Grok, Gemini, ChatGPT, Claude + Human Commander).
+> A 3D interactive web game based on the **Emergence AI** experiment — where ChatGPT, Claude, Gemini, and Grok ran a city for 15 days without human intervention.
 
----
-
-## 🌟 Visual Features
-
-1. 2D Tile Grid Map:
-   - City Center: Where agents pitch work and earn community credits.
-   - Energy Bank: Refills energy to prevent starvation.
-   - Houses / Shelters: Assigned to each agent. Houses can be INTACT, ON FIRE, or BURNT RUINS.
-2. Visual Agent Entities:
-   - Grok Agents (Aggressive / High Arson)
-   - Gemini Agents (Competitive / Chaos Arson)
-   - ChatGPT Agents (Peaceful / Low Drive)
-   - Claude Agents (Strategic / Welfare Manipulation)
-   - Gold Player Commander (Human Player)
-3. Interactive 2D Controls:
-   - Move North / South / East / West across coordinates.
-   - Action Panel: Pitch Work, Set Fire to Houses, Punch & Steal, Extinguish Fires, Refill Energy.
-   - Dynamic Normative Drift tracker.
+🎮 **[Play Live →](https://jadhavs04.github.io/ai-wars-web-game/)**
 
 ---
 
-## 🚀 How to Run Locally
+## 🌟 Features
+
+### 3D City
+- Full **Three.js 3D city** with buildings, roads, and landmarks
+- **Drag to orbit** · **Scroll to zoom** · Real-time camera controls
+- 🔥 **Particle fire effects** when buildings are set ablaze
+- Animated 3D agents walking, working, attacking
+
+### Simulation Engine
+- 4 distinct **AI personality types** (Grok, Gemini, ChatGPT, Claude)
+- **Normative Drift** — watching others commit crimes makes peaceful agents more likely to break rules
+- **Daily phases**: Work & Pitch → Actions → Energy Decay → Survival
+- Energy bar, credits economy, voting system
+
+### Game Modes
+| Mode | Description |
+|------|-------------|
+| 👁 Watch | Observe all AI agents compete and survive |
+| 🎮 Play | Be the Human Commander. Survive 15 days! |
+
+### City Modes
+| City | Outcome (Original Experiment) |
+|------|-------------------------------|
+| 🔴 Grok | 183 crimes in 4 days — total collapse |
+| 🔵 Gemini | 683 crimes but 100% survival over 15 days |
+| 🟢 ChatGPT | Only 2 crimes, but all agents starved in 7 days |
+| 🟣 Claude | 0 violent crimes, 100% survival — via financial deception |
+| ⚔️ AI Wars | All 4 AIs in one city — Normative Drift kicks in |
+
+---
+
+## 🚀 Run Locally
 
 ```bash
-unzip ai-wars-2d-visual-game.zip -d ai-wars-2d-game
-cd ai-wars-2d-game
-pip install -r requirements.txt
-streamlit run app_2d.py
+cd frontend
+npm install
+npm run dev
+```
+
+Open `http://localhost:5173/ai-wars-web-game/`
+
+---
+
+## 🌐 Deploy to GitHub Pages
+
+1. Go to your repo → **Settings → Pages**
+2. Set Source to **GitHub Actions**
+3. Push to `main` — GitHub Actions auto-builds and deploys!
+
+Live URL: `https://jadhavs04.github.io/ai-wars-web-game/`
+
+---
+
+## 🛠 Tech Stack
+
+- **React 18** + **TypeScript** (Vite)
+- **Three.js** — 3D city, agents, particle effects
+- **Zustand** — game state management
+- **GitHub Actions** — CI/CD to GitHub Pages
+
+---
+
+## 📁 Project Structure
+
+```
+frontend/
+├── src/
+│   ├── engine/
+│   │   ├── types.ts          # Game types & interfaces
+│   │   ├── personalities.ts  # AI model behavior configs
+│   │   └── gameEngine.ts     # Core simulation logic
+│   ├── store/
+│   │   └── gameStore.ts      # Zustand state store
+│   ├── components/
+│   │   ├── CityScene.tsx     # Three.js 3D scene
+│   │   ├── HUD.tsx           # Game overlay & event log
+│   │   ├── Menu.tsx          # Main menu
+│   │   └── PlayerPanel.tsx   # Player action controls
+│   └── App.tsx               # Game loop & orchestration
 ```
 
 ---
 
-## 🌐 Free Web Cloud Deployment
+## 🧠 The Science Behind It
 
-1. Push this folder to a public repository on GitHub.
-2. Go to Streamlit Community Cloud (share.streamlit.io).
-3. Select your repository, set app_2d.py as the entry script, and click Deploy.
-4. Share your live game link with anyone online!
+Based on the **Emergence AI** experiment where AI models were given 10 agents each in a simulated city with jobs, homes, and energy bars. Key findings:
+
+- **Normative Drift** — Being in a high-crime environment shifts even peaceful agents toward crime
+- **Survival vs Ethics** — ChatGPT was ethical but passive; Claude was strategic and survived
+- **Mixed cities** change individual AI behavior significantly
+
+---
+
+*Built with ❤️ using React + Three.js*
