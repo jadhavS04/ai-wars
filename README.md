@@ -1,102 +1,34 @@
-# ⚔️ AI Wars: 3D City Governance Simulation
+# AI Wars — Streamlit launcher
 
-> A 3D interactive web game based on the **Emergence AI** experiment — where ChatGPT, Claude, Gemini, and Grok ran a city for 15 days without human intervention.
+This project wraps the existing React/Vite/Three.js AI Wars game in a Streamlit page. It does not port the 3D game engine to Python; it embeds the existing GitHub Pages deployment.
 
-🎮 **[Play Live →](https://jadhavs04.github.io/ai-wars-web-game/)**
+## Files
+- `streamlit_app.py` — Streamlit launcher and embedded game
+- `requirements.txt` — Python dependency
+- `.streamlit/config.toml` — dark theme and server configuration
 
----
-
-## 🌟 Features
-
-### 3D City
-- Full **Three.js 3D city** with buildings, roads, and landmarks
-- **Drag to orbit** · **Scroll to zoom** · Real-time camera controls
-- 🔥 **Particle fire effects** when buildings are set ablaze
-- Animated 3D agents walking, working, attacking
-
-### Simulation Engine
-- 4 distinct **AI personality types** (Grok, Gemini, ChatGPT, Claude)
-- **Normative Drift** — watching others commit crimes makes peaceful agents more likely to break rules
-- **Daily phases**: Work & Pitch → Actions → Energy Decay → Survival
-- Energy bar, credits economy, voting system
-
-### Game Modes
-| Mode | Description |
-|------|-------------|
-| 👁 Watch | Observe all AI agents compete and survive |
-| 🎮 Play | Be the Human Commander. Survive 15 days! |
-
-### City Modes
-| City | Outcome (Original Experiment) |
-|------|-------------------------------|
-| 🔴 Grok | 183 crimes in 4 days — total collapse |
-| 🔵 Gemini | 683 crimes but 100% survival over 15 days |
-| 🟢 ChatGPT | Only 2 crimes, but all agents starved in 7 days |
-| 🟣 Claude | 0 violent crimes, 100% survival — via financial deception |
-| ⚔️ AI Wars | All 4 AIs in one city — Normative Drift kicks in |
-
----
-
-## 🚀 Run Locally
+## Run locally
 
 ```bash
-cd frontend
-npm install
-npm run dev
+python -m venv .venv
+# Windows PowerShell:
+.venv\Scripts\Activate.ps1
+# macOS/Linux:
+# source .venv/bin/activate
+python -m pip install -r requirements.txt
+streamlit run streamlit_app.py
 ```
 
-Open `http://localhost:5173/ai-wars-web-game/`
+Open the local URL printed in the terminal, normally `http://localhost:8501`.
 
----
+## Deploy to Streamlit Community Cloud
+1. Push these files to a GitHub repository. They can be added to the root of your existing `ai-wars-web-game` repository, or committed in a separate deployment repository.
+2. Visit https://share.streamlit.io/ and sign in with GitHub.
+3. Choose **Create app**, select the repository and branch, and set **Main file path** to `streamlit_app.py`.
+4. Deploy. Streamlit installs the packages from `requirements.txt`.
 
-## 🌐 Deploy to GitHub Pages
+## If the game doesn't show inside the page
+Use the **Open game in a new tab** button. The embedded game relies on the GitHub Pages frontend being publicly reachable and allowing it to be displayed in an iframe. Your repository's README currently lists the game URL as:
+`https://jadhavs04.github.io/ai-wars-web-game/`
 
-1. Go to your repo → **Settings → Pages**
-2. Set Source to **GitHub Actions**
-3. Push to `main` — GitHub Actions auto-builds and deploys!
-
-Live URL: `https://jadhavs04.github.io/ai-wars-web-game/`
-
----
-
-## 🛠 Tech Stack
-
-- **React 18** + **TypeScript** (Vite)
-- **Three.js** — 3D city, agents, particle effects
-- **Zustand** — game state management
-- **GitHub Actions** — CI/CD to GitHub Pages
-
----
-
-## 📁 Project Structure
-
-```
-frontend/
-├── src/
-│   ├── engine/
-│   │   ├── types.ts          # Game types & interfaces
-│   │   ├── personalities.ts  # AI model behavior configs
-│   │   └── gameEngine.ts     # Core simulation logic
-│   ├── store/
-│   │   └── gameStore.ts      # Zustand state store
-│   ├── components/
-│   │   ├── CityScene.tsx     # Three.js 3D scene
-│   │   ├── HUD.tsx           # Game overlay & event log
-│   │   ├── Menu.tsx          # Main menu
-│   │   └── PlayerPanel.tsx   # Player action controls
-│   └── App.tsx               # Game loop & orchestration
-```
-
----
-
-## 🧠 The Science Behind It
-
-Based on the **Emergence AI** experiment where AI models were given 10 agents each in a simulated city with jobs, homes, and energy bars. Key findings:
-
-- **Normative Drift** — Being in a high-crime environment shifts even peaceful agents toward crime
-- **Survival vs Ethics** — ChatGPT was ethical but passive; Claude was strategic and survived
-- **Mixed cities** change individual AI behavior significantly
-
----
-
-*Built with ❤️ using React + Three.js*
+If that URL changes, update `GAME_URL` in `streamlit_app.py`.
