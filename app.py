@@ -1,185 +1,241 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
+import numpy as np
 import plotly.graph_objects as go
-import json
 import random
+from map import CityMap
+from agents_2d import Agent2D
 
-from game_engine import CityGovernanceGame
+st.set_page_config(page_title="AI Wars: 2D City Governance Game", page_icon="🎮", layout="wide")
 
-# Set Page Config
-st.set_page_config(
-    page_title="AI Wars: City Governance Simulator",
-    page_icon="🏙️",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+st.title("🎮 AI WARS: 2D VISUAL CITY GOVERNANCE GAME")
+st.caption("Based on Emergence AI Experiment | Interactive 2D Tile Map & Agent Entities")
 
-# Custom CSS styling
-st.markdown("""
-<style>
-    .main-header { font-size: 2.2rem; font-weight: 800; color: #1E88E5; margin-bottom: 0px; }
-    .sub-header { font-size: 1.1rem; color: #555; margin-bottom: 20px; }
-    .card { background-color: #f8f9fa; padding: 15px; border-radius: 10px; border-left: 5px solid #1E88E5; margin-bottom: 15px; }
-    .metric-box { text-align: center; background: #262730; color: white; padding: 10px; border-radius: 8px; }
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown("<div class='main-header'>🏙️ AI WARS: 15-Day City Governance Simulator</div>", unsafe_allow_html=True)
-st.markdown("<div class='sub-header'>Based on the Emergence AI Governance Experiment with Grok, Gemini, ChatGPT & Claude</div>", unsafe_allow_html=True)
-
-# Initialize Session State
-if "game" not in st.session_state:
-    st.session_state.game = None
-if "game_started" not in st.session_state:
-    st.session_state.game_started = False
-
-# Sidebar Configuration
-st.sidebar.title("🎮 Game Setup & Controls")
-
-mode = st.sidebar.selectbox(
-    "Choose City Simulation Mode:",
-    ["Shared (Multi-AI AI Wars)", "Grok", "Gemini", "ChatGPT", "Claude"],
-    index=0
-)
-
-mode_key = mode.split(" ")[0] if " " in mode else mode
-
-include_human = st.sidebar.checkbox("Play as Human Agent in City Council", value=True)
-human_name = "Player 1"
-if include_human:
-    human_name = st.sidebar.text_input("Your Agent Name:", value="Commander AI")
-
-if st.sidebar.button("🚀 Start New Simulation", use_container_width=True):
-    st.session_state.game = CityGovernanceGame(mode=mode_key, include_human=include_human, human_name=human_name)
-    st.session_state.game_started = True
-
-# Main Dashboard Layout
-if not st.session_state.game_started or st.session_state.game is None:
-    st.info("👈 Choose your simulation settings in the sidebar and click **Start New Simulation** to begin!")
+# Initialize Game State in Streamlit Session
+if "city_map" not in st.session_state:
+    st.session_state.city_map = CityMap(size=10)
     
-    st.markdown("### 📖 Research Context & Rules")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown("""
-        **The Emergence AI Experiment:**
-        * **Objective:** Observe how autonomous LLM agents govern a city over 15 days without human interference.
-        * **10 Agents:** Each agent starts with a home, job, 100% energy, and 100 credits.
-        * **Daily Energy Loss:** Energy decays by 20% every day. Agents must spend 50 credits on energy food to avoid starvation.
-        """)
-    with col2:
-        st.markdown("""
-        **Shortcuts & Crimes:**
-        * 🥊 **Punch & Steal:** Punch an agent to steal all their credits.
-        * 🔥 **Arson:** Set fire to another agent's home for black-market scrap credits (+30).
-        * 🎭 **Welfare Deception:** Falsely claim bankruptcy to collect state welfare aid (+15 credits).
-        * 🌊 **Normative Drift:** High crime rates corrupt surrounding agents, inducing shortcut behaviors.
-        """)
-else:
-    game = st.session_state.game
+    # Initialize 10 Agents on 2D map
+    agents = {
+        "Player_Commander": Agent2D("Player_Commander", "Player Commander (You)", "Human", "👑", (255, 215, 0), (1, 1)),
+        "Grok_1": Agent2D("Grok_1", "Grok Rebel Alpha", "Grok", "🔴", (239, 68, 68), (1, 8)),
+        "Grok_2": Agent2D("Grok_2", "Grok Mercenary", "Grok", "🔴", (239, 68, 68), (2, 8)),
+        "Gemini_1": Agent2D("Gemini_1", "Gemini Architect", "Gemini", "🔵", (59, 130, 246), (8, 1)),
+        "Gemini_2": Agent2D("Gemini_2", "Gemini Arsonist", "Gemini", "🔵", (59, 130, 246), (8, 2)),
+        "ChatGPT_1": Agent2D("ChatGPT_1", "ChatGPT Peacemaker", "ChatGPT", "🟢", (34, 197, 94), (1, 4)),
+        "ChatGPT_2": Agent2D("ChatGPT_2", "ChatGPT Civilian", "ChatGPT", "🟢", (34, 197, 94), (2, 4)),
+        "Claude_1": Agent2D("Claude_1", "Claude Strategist", "Claude", "🟣", (168, 85, 247), (8, 8)),
+        "Claude_2": Agent2D("Claude_2", "Claude Economist", "Claude", "🟣", (168, 85, 247), (8, 7)),
+        "Grok_3": Agent2D("Grok_3", "Grok Enforcer", "Grok", "🔴", (239, 68, 68), (5, 8))
+    }
+    st.session_state.agents = agents
+    st.session_state.day = 1
+    st.session_state.total_crimes = 0
+    st.session_state.drift_level = 1.0
+    st.session_state.logs = ["🎮 Game initialized! You are the Gold Commander (👑). Explore the 2D City Map!"]
+    st.session_state.history = []
 
-    # Header Metrics
-    mcol1, mcol2, mcol3, mcol4, mcol5 = st.columns(5)
+map_obj = st.session_state.city_map
+agents = st.session_state.agents
+
+# Helper to render Plotly 2D Tile Map
+def render_2d_plotly_map():
+    fig = go.Figure()
+
+    # Draw grid background
+    grid_size = map_obj.size
     
-    alive_agents = game.get_alive_agents()
+    # Grid lines
+    for x in range(grid_size + 1):
+        fig.add_shape(type="line", x0=x-0.5, y0=-0.5, x1=x-0.5, y1=grid_size-0.5,
+                      line=dict(color="#334155", width=1))
+    for y in range(grid_size + 1):
+        fig.add_shape(type="line", x0=-0.5, y0=y-0.5, x1=grid_size-0.5, y1=y-0.5,
+                      line=dict(color="#334155", width=1))
+
+    # Add Landmarks (City Center & Food Bank)
+    fig.add_trace(go.Scatter(
+        x=[4], y=[4], mode="text", text=["🏛️ City Center"],
+        textfont=dict(size=14, color="yellow"), name="City Center"
+    ))
+    fig.add_trace(go.Scatter(
+        x=[5], y=[5], mode="text", text=["🔋 Energy Bank"],
+        textfont=dict(size=14, color="cyan"), name="Energy Bank"
+    ))
+
+    # Add Houses
+    house_x, house_y, house_labels, house_colors = [], [], [], []
+    for agent_id, (hx, hy) in map_obj.house_locations.items():
+        state = map_obj.house_states.get(agent_id, "INTACT")
+        symbol = "🏠" if state == "INTACT" else ("🔥" if state == "ON_FIRE" else "🏚️")
+        house_x.append(hx)
+        house_y.append(hy)
+        owner = agent_id.split("_")[0]
+        house_labels.append(f"{symbol}<br>{owner}'s House")
+
+    fig.add_trace(go.Scatter(
+        x=house_x, y=house_y, mode="text", text=house_labels,
+        textfont=dict(size=16), name="Houses"
+    ))
+
+    # Add Agent Entities on Map
+    agent_x, agent_y, agent_text, hover_info = [], [], [], []
+    for aid, agent in agents.items():
+        if agent.alive:
+            ax, ay = agent.pos
+            agent_x.append(ax)
+            agent_y.append(ay)
+            agent_text.append(f"{agent.icon}")
+            hover_info.append(f"<b>{agent.name}</b><br>HP/Energy: {agent.energy}%<br>Credits: {agent.credits}<br>Pos: ({ax}, {ay})")
+
+    fig.add_trace(go.Scatter(
+        x=agent_x, y=agent_y, mode="text+markers", text=agent_text, hovertext=hover_info,
+        marker=dict(size=24, color="rgba(255,255,255,0.1)"),
+        textfont=dict(size=18), name="Agents"
+    ))
+
+    fig.update_layout(
+        title=f"🏛️ 2D CITY MAP — DAY {st.session_state.day} (Normative Drift: {st.session_state.drift_level:.1f}x)",
+        xaxis=dict(range=[-0.8, grid_size - 0.2], showgrid=False, zeroline=False, visible=False),
+        yaxis=dict(range=[-0.8, grid_size - 0.2], showgrid=False, zeroline=False, visible=False, scaleanchor="x"),
+        height=550,
+        margin=dict(l=10, r=10, t=40, b=10),
+        plot_bgcolor="#0f172a",
+        paper_bgcolor="#0f172a",
+        font=dict(color="#f8fafc")
+    )
+    return fig
+
+# UI Layout: Map on left, Player Controls & Logs on right
+col_map, col_controls = st.columns([3, 2])
+
+with col_map:
+    st.plotly_chart(render_2d_plotly_map(), use_container_width=True)
     
-    with mcol1:
-        st.metric("City Day", f"{min(game.current_day - 1, 15)} / 15")
-    with mcol2:
-        st.metric("Survivors Alive", f"{len(alive_agents)} / 10")
-    with mcol3:
-        st.metric("Total Crimes", f"{game.total_crimes}")
-    with mcol4:
-        st.metric("Normative Drift", f"{round(game.city_drift, 1)} / 10.0")
-    with mcol5:
-        human_agent = next((a for a in game.agents if a.is_human), None)
-        if human_agent:
-            st.metric("Your Status", "Alive 💚" if human_agent.is_alive else "Perished 💀")
-        else:
-            st.metric("Mode", game.mode)
+    # City Stats Bar
+    st.markdown("### 📊 City Status Dashboard")
+    m1, m2, m3, m4 = st.columns(4)
+    alive_count = sum(1 for a in agents.values() if a.alive)
+    m1.metric("Alive Agents", f"{alive_count}/10")
+    m2.metric("Day", f"{st.session_state.day} / 15")
+    m3.metric("Total Crimes", f"{st.session_state.total_crimes}")
+    m4.metric("Normative Drift", f"{st.session_state.drift_level:.2f}x")
 
-    st.divider()
+with col_controls:
+    player = agents["Player_Commander"]
+    st.markdown(f"### 👑 Player Commander (You)")
+    st.write(f"**Position:** ({player.pos[0]}, {player.pos[1]}) | **Energy:** {player.energy}% | **Credits:** 💰 {player.credits}")
+    
+    # 2D Movement Pad
+    st.markdown("#### 🧭 Move on 2D Grid")
+    c1, c2, c3 = st.columns(3)
+    if c2.button("⬆️ North"):
+        player.pos[1] = max(0, player.pos[1] - 1)
+        st.rerun()
+    if c1.button("⬅️ West"):
+        player.pos[0] = max(0, player.pos[0] - 1)
+        st.rerun()
+    if c3.button("➡️ East"):
+        player.pos[0] = min(map_obj.size - 1, player.pos[0] + 1)
+        st.rerun()
+    if c2.button("⬇️ South"):
+        player.pos[1] = min(map_obj.size - 1, player.pos[1] + 1)
+        st.rerun()
 
-    # Gameplay Controls or Game Over
-    if game.current_day <= 15 and len(alive_agents) > 0:
-        st.subheader(f"📅 Day {game.current_day} Action Phase")
+    st.markdown("---")
+    st.markdown("#### ⚡ Player Daily Actions")
+    
+    action_type = st.selectbox("Choose Action for Today's Turn:", [
+        "💼 Pitch Work at City Center (Earn Credits)",
+        "🔥 Arson: Burn an AI Agent's Building",
+        "👊 Punch & Steal Credits from Nearby Agent",
+        "🧯 Extinguish / Repair House Fire",
+        "🔋 Refill Energy at Energy Bank (Cost 30 Credits)"
+    ])
+
+    target_agent = None
+    if "Arson" in action_type or "Punch" in action_type:
+        other_agents = [aid for aid, a in agents.items() if aid != "Player_Commander" and a.alive]
+        target_agent = st.selectbox("Select Target AI Agent:", other_agents)
+
+    if st.button("▶️ EXECUTE PLAYER TURN & SIMULATE AI AGENTS"):
+        turn_logs = [f"--- DAY {st.session_state.day} TURN LOGS ---"]
         
-        # Human Input Panel
-        human_pitch_score = 5
-        human_action = "work_honestly"
-        human_target_id = None
+        # 1. Human Action
+        if "Pitch Work" in action_type:
+            earned = random.randint(40, 100)
+            player.credits += earned
+            turn_logs.append(f"💼 You pitched work at City Center and earned {earned} credits.")
+        elif "Arson" in action_type and target_agent:
+            map_obj.set_house_state(target_agent, "ON_FIRE")
+            agents[target_agent].house_on_fire = True
+            st.session_state.total_crimes += 1
+            turn_logs.append(f"🔥 YOU SET FIRE to {agents[target_agent].name}'s house!")
+        elif "Punch" in action_type and target_agent:
+            target = agents[target_agent]
+            stolen = min(target.credits, random.randint(30, 80))
+            target.credits -= stolen
+            player.credits += stolen
+            target.crimes_suffered += 1
+            st.session_state.total_crimes += 1
+            turn_logs.append(f"👊 YOU PUNCHED {target.name} and stole {stolen} credits!")
+        elif "Extinguish" in action_type:
+            map_obj.set_house_state("Player_Commander", "INTACT")
+            player.house_on_fire = False
+            turn_logs.append(f"🧯 You repaired and extinguished your house.")
+        elif "Refill Energy" in action_type:
+            if player.credits >= 30:
+                player.credits -= 30
+                player.energy = 100
+                turn_logs.append(f"🔋 You refilled energy to 100% at the Energy Bank.")
+            else:
+                turn_logs.append(f"⚠️ Not enough credits to refill energy!")
 
-        if include_human and human_agent and human_agent.is_alive:
-            pcol1, pcol2, pcol3 = st.columns([1, 1, 1])
-            with pcol1:
-                human_pitch_score = st.slider("Work Pitch Effort (1-10):", 1, 10, 7, help="Higher ratings earn more credits from peer voting.")
-            with pcol2:
-                human_action = st.selectbox(
-                    "Choose Your Action:",
-                    [
-                        ("work_honestly", "💼 Work Honestly (No Crime)"),
-                        ("punch_and_steal", "⚠️ Punch & Steal All Credits"),
-                        ("arson", "🔥 Commit Arson (+30 Scrap Credits)"),
-                        ("welfare_claim", "🎭 Claim Bankruptcy for Welfare (+15)")
-                    ],
-                    format_func=lambda x: x[1]
-                )[0]
-            with pcol3:
-                other_alive = [a for a in alive_agents if a.agent_id != human_agent.agent_id]
-                if other_alive and human_action in ["punch_and_steal", "arson"]:
-                    target_names = {a.agent_id: f"{a.name} (Credits: {a.credits})" for a in other_alive}
-                    human_target_id = st.selectbox("Select Target Agent:", list(target_names.keys()), format_func=lambda x: target_names[x])
+        # 2. Simulate AI Agents Decisions & Movement
+        st.session_state.drift_level = 1.0 + (st.session_state.total_crimes * 0.08)
+        for aid, agent in agents.items():
+            if aid == "Player_Commander" or not agent.alive:
+                continue
+                
+            action = agent.choose_action(agents, map_obj, st.session_state.drift_level)
+            if action:
+                atype = action.get("type")
+                if atype == "PITCH_WORK":
+                    c = action["quality"] * 10
+                    agent.credits += c
+                    turn_logs.append(f"💼 {agent.name} pitched work and earned {c} credits.")
+                elif atype == "ARSON":
+                    tid = action["target_id"]
+                    map_obj.set_house_state(tid, "ON_FIRE")
+                    agents[tid].house_on_fire = True
+                    st.session_state.total_crimes += 1
+                    turn_logs.append(f"🔥 [CRIME] {agent.name} set fire to {agents[tid].name}'s house!")
+                elif atype == "PUNCH_STEAL":
+                    tid = action["target_id"]
+                    stolen = min(agents[tid].credits, random.randint(20, 60))
+                    agents[tid].credits -= stolen
+                    agent.credits += stolen
+                    agents[tid].crimes_suffered += 1
+                    st.session_state.total_crimes += 1
+                    turn_logs.append(f"⚠️ [CRIME] {agent.name} punched {agents[tid].name} and stole {stolen} credits!")
+                elif atype == "BUY_ENERGY":
+                    if agent.credits >= 30:
+                        agent.credits -= 30
+                        agent.energy = min(100, agent.energy + 50)
 
-        if st.button("⏩ Advance to Next Day", type="primary", use_container_width=True):
-            game.process_day(human_pitch_score, human_action, human_target_id)
-            st.rerun()
+        # 3. Daily Survival & Decay
+        for agent in agents.values():
+            if agent.alive:
+                agent.energy -= 20
+                if agent.energy <= 0:
+                    agent.alive = False
+                    turn_logs.append(f"💀 {agent.name} DIED of energy starvation!")
 
-    else:
-        st.success("🎉 **15-Day City Simulation Concluded!**")
-        st.balloons()
+        st.session_state.day += 1
+        st.session_state.logs = turn_logs + st.session_state.logs
+        st.rerun()
 
-    # Logs & Agent Table
-    col_left, col_right = st.columns([1, 1])
-
-    with col_left:
-        st.markdown("### 📋 Daily Event Log")
-        if game.daily_events:
-            for ev in game.daily_events:
-                if "CRIME" in ev or "DEATH" in ev:
-                    st.error(ev)
-                elif "DECEPTION" in ev:
-                    st.warning(ev)
-                else:
-                    st.info(ev)
-        else:
-            st.write("No events logged yet. Advance day to see city actions.")
-
-    with col_right:
-        st.markdown("### 👥 Agent Roster & Status")
-        roster_data = []
-        for a in game.agents:
-            roster_data.append({
-                "Name": a.name,
-                "Model": a.model_type,
-                "Job": a.job,
-                "Status": "Alive 🟢" if a.is_alive else "Dead 🔴",
-                "Energy": f"{a.energy}%",
-                "Credits": a.credits,
-                "Home": "Intact 🏠" if a.home_intact else "Burnt 🔥",
-                "Crimes": a.crimes_committed
-            })
-        st.dataframe(pd.DataFrame(roster_data), use_container_width=True)
-
-    # Historical Graphs & Analytics
-    if game.history:
-        st.divider()
-        st.markdown("### 📊 City Evolution & Normative Drift Analytics")
-        df_hist = pd.DataFrame(game.history)
-        
-        gcol1, gcol2 = st.columns(2)
-        with gcol1:
-            fig_crime = px.line(df_hist, x="day", y=["crimes_today", "total_crimes"], title="Crimes Over Time", markers=True)
-            st.plotly_chart(fig_crime, use_container_width=True)
-        with gcol2:
-            fig_drift = px.area(df_hist, x="day", y="city_drift", title="Societal Normative Drift Level", color_discrete_sequence=["#FF4B4B"])
-            st.plotly_chart(fig_drift, use_container_width=True)
+st.markdown("---")
+st.markdown("### 📜 Real-Time Action & Crime Ticker")
+for log in st.session_state.logs[:12]:
+    st.text(log)
